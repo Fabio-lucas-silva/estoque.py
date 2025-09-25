@@ -1,29 +1,30 @@
-from flask import Flask, render_template, request, redirect, url_for, session, g
+from flask import Flask, render_template,request, redirect, url_for, session,g
 from urllib.parse import quote_plus
 import psycopg2
 import psycopg2.extras
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
-
+#configurar a aplicação
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your_secret_key'
+app.config['SECRET_KEY'] = 'sua_chave_secreta_aqui'
 
-DB_USER = 'postegres'
+#CONFIGURAR O BANCO DE DADOS
+DB_USER = 'postgres'
 DB_PASSWORD = 'wcc@2023'
 DB_HOST = 'localhost'
-DB_NAME = 'py_estoque.db'
-DB_PORT = '5433'
-
+DB_NAME = 'py_estoque'
+DB_PORT = '5432'
+# URL - encode A SENHA PARA GARANTIR QUE CARACTERES ESPECIAIS SEJAM TRATADOS CORRETAMENTE
 ENCODED_DB_PASSWORD = quote_plus(DB_PASSWORD)
 
 app.config['DATABASE_URL'] = f"postgresql://{DB_USER}:{ENCODED_DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-#funçao de conexao com o banco de dados
+#função para obter a conexão com o banco de dados
 def get_db():
     if 'db' not in g:
         g.db = psycopg2.connect(
             user = DB_USER,
             password = DB_PASSWORD,
-            host = DB_HPST,
+            host = DB_HOST,
             port = DB_PORT,
             database = DB_NAME
         )
@@ -37,27 +38,26 @@ def close_db(e=None):
 
 def query_db(query, args=(), one=False):
     db = get_db()
-    cur = db.cursor()
-    cur = db.execute(query, args)
-    db.commit()
+    cur = db.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute(query, args)
     rv = cur.fetchall()
     cur.close()
-    # entender melhor o return da funçao 
     return (rv[0] if rv else None) if one else rv
 
 def execute_db(query, args=()):
     db = get_db()
-    cur =  db.cursor()
+    cur = db.cursor()
     cur.execute(query, args)
     db.commit()
-    #retorna o id do ultimo registro inserido,util para o serial
-    if  cur.description:
-        last_id = cur.fetchall()[0]
-    else:
-        last_id = None
+    last_id = None
+    if cur.description:
+        try:
+            last_id = cur.fetchone()[0]
+        except Exception:
+            last_id = None
     cur.close()
     return last_id
-    
+
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -77,29 +77,28 @@ def autenticacao():
     if request.method == 'POST':
         email = request.form['email']
         senha = request.form['senha']
-        usuario = query_db('SELECT id, senha FROM usuarios WHERE email = %s', (email,), one=True)
-        
+        usuario = query_db("SELECT * FROM usuarios WHERE email = %s", (email,), one=True)
         if usuario and check_password_hash(usuario['senha'], senha):
             session['usuario_id'] = usuario['id']
             session['usuario_nome'] = usuario['nome']
             return redirect(url_for('cadastro_produto'))
         else:
-            return render_template('autenticacao.html', erro='Email ou senha invalido.')
+            return render_template('autenticacao.html', erro="Email ou senha incorretos.")
     return render_template('autenticacao.html')
 
 @app.route('/cadastro_usuario', methods=['GET', 'POST'])
-def cadastrar_usuario():
+def cadastro_usuario():
     if request.method == 'POST':
         nome = request.form['nome']
         email = request.form['email']
         senha = request.form['senha']
 
-        usuario_existente = query_db('SELECT id FROM usuarios WHERE email = %s', (email,), one=True)
+        usuario_existente = query_db("SELECT * FROM usuarios WHERE email = %s", (email,), one=True)
         if usuario_existente:
-            return render_template('cadastro_usuario.html', erro='Email ja cadastrado.')
+            return render_template('cadastro_usuario.html', erro="Email já cadastrado.")
 
         senha_hash = generate_password_hash(senha, method='pbkdf2:sha256')
-        execute_db('INSERT INTO usuarios (nome, email, senha) VALUES (%s, %s, %s)', (nome, email, senha_hash))
+        execute_db("INSERT INTO usuarios (nome, email, senha) VALUES (%s, %s, %s)", (nome, email, senha_hash))
         return redirect(url_for('autenticacao'))
     return render_template('cadastro_usuario.html')
 
@@ -119,41 +118,40 @@ def cadastro_produto():
         preco = float(request.form['preco'])
         quantidade_minima = int(request.form['quantidade_minima'])
 
-        produto = query_db('SELECT * FROM produtos WHERE nome = %s', (nome,), one=True)
+        produto = query_db("SELECT * FROM produtos WHERE nome = %s", (nome,), one=True)
         if produto:
-            execute_db('UPDATE produtos SET quantidade + %s, quantidade = %s, WHERE id = %s', (quantidade, preco, quantidade_minima, produto['id']))
+            execute_db('UPDATE produtos SET quantidade = quantidade + %s, preco = %s, quantidade_minima = %s WHERE id = %s',
+                       (quantidade, preco, quantidade_minima, produto['id']))
             produto_id = produto['id']
         else:
-            result = execute_db('INSERT INTO produtos (nome, descricao, quantidade, preco, quantidade_minima) VALUES (%s, %s, %s, %s, %s) RETURNING id', (nome, descricao, quantidade, preco, quantidade_minima))
-            produto_id = result
+            produto_id = execute_db('INSERT INTO produtos (nome, descricao, quantidade, preco, quantidade_minima) VALUES (%s, %s, %s, %s, %s) RETURNING id',(nome, descricao, quantidade, preco, quantidade_minima))
 
-        execute_db('INSERT INTO movimentacoes (produto_id, tipo, quantidade) VALUES (%s, %s, %s)', (produto_id, 'entrada', quantidade, session['usuario_id']))
+        execute_db('INSERT INTO movimentacao_estoque (produto_id, tipo_movimentacao, quantidade, usuario_id, data_hora) VALUES (%s, %s, %s, %s, NOW())', (produto_id, 'Entrada', quantidade, session['usuario_id']))
 
-        return redirect(url_for('cdastro_produto'))
+        return redirect(url_for('cadastro_produto'))
 
-    produtos = query_db('SELECT * FROM produtos ORDER BY quantidade - quantidade_minima')
+    produtos = query_db("SELECT * FROM produtos ORDER BY quantidade - quantidade_minima")
     return render_template('cadastro_produto.html', produtos=produtos, usuario=session.get('usuario_nome'))
 
 @app.route('/saida_produto/<int:produto_id>', methods=['POST'])
 @login_required
 def saida_produto(produto_id):
-    produto = query_db('SELECT * FROM produtos WHERE id = %s', (produto_id,), one=True)
+    produto = query_db("SELECT * FROM produtos WHERE id = %s", (produto_id,), one=True)
     if not produto:
-        return 'Produto nao cadastrado', 404
+        return "Produto não encontrado", 404
 
     quantidade_saida = int(request.form['quantidade_saida'])
 
     if quantidade_saida > 0 and produto['quantidade'] >= quantidade_saida:
-        execute_db('INSERT INTO movimentacoes (produto_id, tipo, quantidade, usuario_id) VALUES (%s, %s, %s, %s)', (quantidade_saida, produto_id))
-        execute_db('INSERT INTO movimentao_estoque (produto_id, tipo_movimentao, quantidade, usuario_id) VALUES (%s, %s, %s, %s)', (produto_id, 'saida', quantidade_saida, session['usuario_id']))
-
+        execute_db('UPDATE produtos SET quantidade = quantidade - %s WHERE id = %s', (quantidade_saida, produto_id))
+        execute_db('INSERT INTO movimentacao_estoque (produto_id, tipo_movimentacao, quantidade, usuario_id, data_hora) VALUES (%s, %s, %s, %s, NOW())', (produto_id, 'Saída', quantidade_saida, session['usuario_id']))
         return redirect(url_for('cadastro_produto'))
 
 @app.route('/estoque')
 @login_required
 def estoque():
-    produtos = query_db('SELECT * FROM movientacao_estoque AS m JOIN usuarios AS u ON m.usuario_id = u.id ORDER BY m.data_hora DESC')
-    return render_template('estoque.html', produtos=produtos, usuario=session.get('usuario_nome'))
+    movimentacoes = query_db('SELECT m.*, u.nome as usuario_nome FROM movimentacao_estoque AS m JOIN usuarios AS u ON m.usuario_id = u.id ORDER BY m.data_hora DESC')
+    return render_template('estoque.html', produtos=movimentacoes, usuario=session.get('usuario_nome'))
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -1,0 +1,297 @@
+/* Reset básico */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(135deg, #1f1c2c, #928dab);
+  color: #fff;
+  min-height: 100vh;
+}
+
+/* Navbar estilizada */
+.navbar {
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  padding: 20px;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.navbar a {
+  text-decoration: none;
+  color: #ffffff;
+  font-weight: bold;
+  padding: 10px 20px;
+  border-radius: 30px;
+  transition: background 0.3s, color 0.3s;
+}
+
+.navbar a:hover {
+  background: #ff6ec4;
+  color: #000;
+}
+
+/* Container do formulário */
+.container {
+  max-width: 400px;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(15px);
+  margin: 80px auto;
+  padding: 40px 30px;
+  border-radius: 20px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+  animation: fadeIn 0.8s ease-in-out;
+}
+
+.container h2 {
+  text-align: center;
+  margin-bottom: 30px;
+  font-size: 2rem;
+  color: #ffffff;
+}
+
+/* Estilização do formulário */
+form {
+  display: flex;
+  flex-direction: column;
+}
+
+
+label {
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #ffb6f1;
+  letter-spacing: 0.5px;
+  font-size: 1.05rem;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"] {
+  padding: 12px;
+  margin-bottom: 20px;
+  border: none;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-size: 1rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  transition: background 0.3s, box-shadow 0.3s;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="number"]:focus {
+  outline: none;
+  background: rgba(255,255,255,0.22);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+}
+
+input[type="submit"],
+button[type="submit"] {
+  padding: 12px;
+  background: linear-gradient(135deg, #ff6ec4, #7873f5);
+  border: none;
+  border-radius: 30px;
+  color: white;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-top: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+  transition: transform 0.3s, box-shadow 0.3s, background 0.3s;
+}
+
+input[type="submit"]:hover,
+button[type="submit"]:hover {
+  background: linear-gradient(135deg, #7873f5, #ff6ec4);
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.18);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 32px;
+  background: rgba(255,255,255,0.07);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.10);
+  animation: fadeIn 0.8s;
+}
+
+th, td {
+  padding: 14px 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.12);
+  text-align: left;
+  color: #fff;
+}
+
+th {
+  background: linear-gradient(135deg, #7873f5, #ff6ec4);
+  color: #fff;
+  font-weight: 700;
+  font-size: 1.08rem;
+  letter-spacing: 0.5px;
+}
+
+tr:nth-child(even) {
+  background: rgba(255,255,255,0.04);
+}
+
+tr:hover {
+  background: rgba(255,255,255,0.18);
+  transition: background 0.2s;
+}
+
+.error, .error-message {
+  background: linear-gradient(90deg, #ff4e4e 60%, #ffb6f1 100%);
+  padding: 12px 18px;
+  border-radius: 12px;
+  color: #fff;
+  margin-bottom: 24px;
+  text-align: center;
+  font-weight: bold;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+}
+
+.container h2, .container h1 {
+  text-shadow: 0 2px 8px rgba(0,0,0,0.18);
+}
+
+/* Links dentro do container */
+.container a {
+  color: #ffb6f1;
+  text-decoration: none;
+  font-weight: bold;
+  transition: color 0.2s;
+}
+.container a:hover {
+  color: #ff6ec4;
+  text-decoration: underline;
+}
+
+/* Parágrafo de link de cadastro */
+.container p {
+  margin-top: 20px;
+  text-align: center;
+  color: #ccc;
+}
+
+@media (max-width: 700px) {
+  .container {
+    max-width: 98vw;
+    padding: 18px 6vw;
+  }
+  table, thead, tbody, th, td, tr {
+    display: block;
+    width: 100%;
+  }
+  th, td {
+    padding: 10px 4px;
+    text-align: left;
+  }
+  th {
+    background: linear-gradient(135deg, #7873f5, #ff6ec4);
+    color: #fff;
+  }
+}
+
+input[type="email"],
+input[type="password"] {
+  padding: 12px;
+  margin-bottom: 20px;
+  border: none;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-size: 1rem;
+  transition: background 0.3s ease;
+}
+
+input:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Botão estilizado */
+button[type="submit"] {
+  padding: 12px;
+  background: linear-gradient(135deg, #ff6ec4, #7873f5);
+  border: none;
+  border-radius: 30px;
+  color: white;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Parágrafo de link de cadastro */
+.container p {
+  margin-top: 20px;
+  text-align: center;
+  color: #ccc;
+}
+
+.container a {
+  color: #ffb6f1;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.container a:hover {
+  text-decoration: underline;
+}
+
+/* Mensagem de erro */
+.error {
+  background: #ff4e4e;
+  padding: 10px 15px;
+  border-radius: 10px;
+  color: #fff;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+/* Animação de entrada */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsividade */
+@media (max-width: 480px) {
+  .navbar {
+    flex-direction: column;
+    gap: 10px;
+    padding: 15px;
+  }
+
+  .container {
+    margin: 40px 20px;
+    padding: 30px 20px;
+  }
+}
